@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Incidencias · Incident API</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+    <main class="container">
+        <header class="header">
+            <div>
+                <p class="eyebrow">INCIDENT API</p>
+                <h1>Incidencias técnicas</h1>
+                <p class="subtitle">
+                    Consulta los reportes y su estado de atención.
+                </p>
+            </div>
+            <button id="refresh" type="button">Actualizar</button>
+        </header>
+
+        <section class="panel" aria-labelledby="list-title">
+            <div class="panel-header">
+                <h2 id="list-title">Reportes registrados</h2>
+                <span id="page-label"></span>
+            </div>
+
+            <p id="feedback" class="feedback"
+               role="status" aria-live="polite"></p>
+
+            <div id="table-container" class="table-container" hidden>
+                <table>
+                    <caption class="sr-only">
+                        Incidencias ordenadas desde la más reciente
+                    </caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Incidencia</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Creación</th>
+                        </tr>
+                    </thead>
+                    <tbody id="incidents"></tbody>
+                </table>
+            </div>
+
+            <nav class="pagination" aria-label="Páginas de incidencias">
+                <button id="previous" type="button" disabled>
+                    Anterior
+                </button>
+                <button id="next" type="button" disabled>
+                    Siguiente
+                </button>
+            </nav>
+        </section>
+
+        <footer>Proyecto de aprendizaje · Java, Spring Boot y PostgreSQL</footer>
+    </main>
+</body>
+</html>
