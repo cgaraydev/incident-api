@@ -35,27 +35,25 @@ public final class Incident {
     }
 
     public void changeStatus(IncidentStatus target, Instant now) {
-    if (!status.canTransitionTo(target)) {
-        throw new IllegalArgumentException(
-                "Cannot transition from " + status + " to " + target
-        );
+        if (!status.canTransitionTo(target)) {
+            throw new IllegalArgumentException(
+                    "Cannot transition from " + status + " to " + target);
+        }
+
+        if (status == target) {
+            return;
+        }
+
+        Objects.requireNonNull(now, "now must not be null");
+
+        if (now.isBefore(updatedAt)) {
+            throw new IllegalArgumentException(
+                    "Status change time must not precede updatedAt");
+        }
+
+        this.status = target;
+        this.updatedAt = now;
     }
-
-    if (status == target) {
-        return;
-    }
-
-    Objects.requireNonNull(now, "now must not be null");
-
-    if (now.isBefore(updatedAt)) {
-        throw new IllegalArgumentException(
-                "Status change time must not precede updatedAt"
-        );
-    }
-
-    this.status = target;
-    this.updatedAt = now;
-}
 
     public UUID getId() {
         return id;
