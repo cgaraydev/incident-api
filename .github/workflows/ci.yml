@@ -28,8 +28,10 @@ jobs:
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
           cache: maven
 
       - name: Run verification
         run: bash ./mvnw --batch-mode --no-transfer-progress verify
+      - name: Build Docker image
+        run: docker build -t incident-api:ci .

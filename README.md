@@ -105,15 +105,87 @@ La variable de entorno `PORT` permite cambiar el puerto.
 
 Flyway aplica automáticamente las migraciones pendientes al arrancar.
 
+## Ejecutar API y PostgreSQL con Docker Compose
+
+Prepara `.env` como se explica en la ejecución local y asegúrate de que
+Docker Desktop esté funcionando.
+
+Si la API está ejecutándose desde Maven, detenla para liberar el puerto 8080.
+
+Genera el JAR y ejecuta las pruebas:
+
+```powershell
+.\mvnw.cmd --batch-mode --no-transfer-progress verify
+```
+
+Construye la imagen e inicia ambos servicios:
+
+```powershell
+docker compose --profile app up -d --build
+```
+
+Consulta el estado y los mensajes de la API:
+
+```powershell
+docker compose --profile app ps
+docker compose logs -f --tail=80 api
+```
+
+Cuando aparezca `Started IncidentApiApplication`, pulsa `Ctrl + C`
+para dejar de seguir los logs. El contenedor continúa funcionando.
+
+Comprueba la API:
+
+```powershell
+Invoke-RestMethod "http://localhost:8080/api/status"
+```
+
+La API se publica en `http://localhost:8080` y utiliza la misma base de
+desarrollo y el mismo volumen persistente que la ejecución desde Maven.
+
+Compose proporciona las credenciales a Spring desde `.env`.
+Este modo no requiere definir `DB_PASSWORD` ni activar el perfil Spring `local`.
+El perfil `app` pertenece a Docker Compose.
+
+Gemini permanece desactivado en esta configuración.
+
+### Aplicar cambios de código
+
+La imagen contiene el JAR generado previamente. Después de modificar Java:
+
+```powershell
+.\mvnw.cmd --batch-mode --no-transfer-progress verify
+docker compose --profile app up -d --build
+```
+
+Reiniciar el contenedor no recompila ni incorpora cambios de código.
+
+### Detener los servicios
+
+```powershell
+docker compose --profile app down
+```
+
+Este comando elimina los contenedores conservando el volumen de PostgreSQL.
+No añadas `-v` si necesitas conservar los datos.
+
+Para volver a desarrollar con Java desde VS Code, inicia solo PostgreSQL:
+
+```powershell
+docker compose up -d postgres
+```
+
+Después arranca Java siguiendo las instrucciones de ejecución local.
+
 ## Endpoints
 
-| Método | Ruta | Resultado |
-|---|---|---|
-| GET | `/api/status` | Respuesta básica de disponibilidad HTTP |
-| POST | `/api/incidents` | Crear una incidencia |
-| GET | `/api/incidents/{id}` | Consultar una incidencia |
-| PATCH | `/api/incidents/{id}/status` | Cambiar su estado |
-| POST | `/api/incidents/{id}/analysis` | Sugerir categoría y resumen mediante Gemini |
+| Método | Ruta                           | Resultado                                   |
+| ------ | ------------------------------ | ------------------------------------------- |
+| GET    | `/api/status`                  | Respuesta básica de disponibilidad HTTP     |
+| POST   | `/api/incidents`               | Crear una incidencia                        |
+| GET    | `/api/incidents/{id}`          | Consultar una incidencia                    |
+| PATCH  | `/api/incidents/{id}/status`   | Cambiar su estado                           |
+| POST   | `/api/incidents/{id}/analysis` | Sugerir categoría y resumen mediante Gemini |
 
 `/api/status` no comprueba la salud de PostgreSQL.
 
@@ -225,11 +297,11 @@ Una incidencia inexistente devuelve `404`.
 
 Transiciones permitidas:
 
-| Estado actual | Destino |
-|---|---|
-| OPEN | IN_PROGRESS |
-| IN_PROGRESS | RESOLVED |
-| RESOLVED | IN_PROGRESS |
+| Estado actual | Destino     |
+| ------------- | ----------- |
+| OPEN          | IN_PROGRESS |
+| IN_PROGRESS   | RESOLVED    |
+| RESOLVED      | IN_PROGRESS |
 
 ## Errores
 
@@ -316,6 +388,7 @@ Implementado y comprobado:
 - Análisis opcional mediante Gemini.
 - Pruebas automatizadas del modelo, API, persistencia y adaptador de IA.
 - Manejo de respuestas inválidas, errores del proveedor y timeouts.
+- Imagen Docker de la API y ejecución conjunta con PostgreSQL mediante Compose.
 
 Las comprobaciones manuales con Gemini incluyeron un problema de red,
 un reporte con información insuficiente y un reporte con instrucciones
@@ -332,7 +405,6 @@ Limitaciones actuales:
 - Las sugerencias de análisis no se almacenan.
 - Sin límites de solicitudes por usuario.
 - Sin prueba automatizada específica de concurrencia.
-- Sin imagen Docker de la API ni despliegue en Google Cloud.
 
 Usar únicamente datos ficticios. La aplicación todavía no está preparada
 para exponerse como servicio público.
