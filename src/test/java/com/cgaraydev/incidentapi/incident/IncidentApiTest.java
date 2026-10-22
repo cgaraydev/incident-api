@@ -209,4 +209,28 @@ class IncidentApiTest {
                 mockMvc.perform(get("/api/incidents/no-es-un-uuid"))
                                 .andExpect(status().isBadRequest());
         }
+
+        @Test
+        void disabledAnalysisReturnsUnavailableAndLeavesIncidentUnchanged()
+                        throws Exception {
+                String location = createIncidentLocation();
+
+                MvcResult before = mockMvc.perform(get(URI.create(location)))
+                                .andExpect(status().isOk())
+                                .andReturn();
+
+                mockMvc.perform(post(URI.create(location + "/analysis")))
+                                .andExpect(status().isServiceUnavailable())
+                                .andExpect(content().contentTypeCompatibleWith(
+                                                MediaType.APPLICATION_PROBLEM_JSON))
+                                .andExpect(jsonPath("$.title").value("Analysis unavailable"))
+                                .andExpect(jsonPath("$.status").value(503))
+                                .andExpect(jsonPath("$.detail")
+                                                .value("Incident analysis is temporarily unavailable."));
+
+                mockMvc.perform(get(URI.create(location)))
+                                .andExpect(status().isOk())
+                                .andExpect(content().json(
+                                                before.getResponse().getContentAsString()));
+        }
 }

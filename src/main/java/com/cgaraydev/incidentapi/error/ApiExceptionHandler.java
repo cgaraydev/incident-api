@@ -13,63 +13,76 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.WebRequest;
 import com.cgaraydev.incidentapi.incident.InvalidIncidentStatusTransitionException;
+import com.cgaraydev.incidentapi.analysis.AnalysisUnavailableException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(IncidentNotFoundException.class)
-    public ProblemDetail handleIncidentNotFound(
-            IncidentNotFoundException exception) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.NOT_FOUND,
-                exception.getMessage());
+        @ExceptionHandler(IncidentNotFoundException.class)
+        public ProblemDetail handleIncidentNotFound(
+                        IncidentNotFoundException exception) {
+                ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                                HttpStatus.NOT_FOUND,
+                                exception.getMessage());
 
-        problem.setTitle("Incident not found");
+                problem.setTitle("Incident not found");
 
-        return problem;
-    }
+                return problem;
+        }
 
-    @ExceptionHandler(InvalidIncidentStatusTransitionException.class)
-    public ProblemDetail handleInvalidStatusTransition(
-            InvalidIncidentStatusTransitionException exception) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.CONFLICT,
-                exception.getMessage());
+        @ExceptionHandler(InvalidIncidentStatusTransitionException.class)
+        public ProblemDetail handleInvalidStatusTransition(
+                        InvalidIncidentStatusTransitionException exception) {
+                ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                                HttpStatus.CONFLICT,
+                                exception.getMessage());
 
-        problem.setTitle("Invalid status transition");
+                problem.setTitle("Invalid status transition");
 
-        return problem;
-    }
+                return problem;
+        }
 
-    @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException exception,
-            HttpHeaders headers,
-            HttpStatusCode status,
-            WebRequest request) {
-        var errors = exception.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(error -> new FieldValidationError(
-                        error.getField(),
-                        error.getDefaultMessage()))
-                .toList();
+        @ExceptionHandler(AnalysisUnavailableException.class)
+        public ProblemDetail handleAnalysisUnavailable(
+                        AnalysisUnavailableException exception) {
+                ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                                HttpStatus.SERVICE_UNAVAILABLE,
+                                "Incident analysis is temporarily unavailable.");
 
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                status,
-                "One or more fields are invalid.");
+                problem.setTitle("Analysis unavailable");
 
-        problem.setTitle("Validation failed");
-        problem.setProperty("errors", errors);
+                return problem;
+        }
 
-        return handleExceptionInternal(
-                exception,
-                problem,
-                headers,
-                status,
-                request);
-    }
+        @Override
+        protected ResponseEntity<Object> handleMethodArgumentNotValid(
+                        MethodArgumentNotValidException exception,
+                        HttpHeaders headers,
+                        HttpStatusCode status,
+                        WebRequest request) {
+                var errors = exception.getBindingResult()
+                                .getFieldErrors()
+                                .stream()
+                                .map(error -> new FieldValidationError(
+                                                error.getField(),
+                                                error.getDefaultMessage()))
+                                .toList();
 
-    public record FieldValidationError(String field, String message) {
-    }
+                ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                                status,
+                                "One or more fields are invalid.");
+
+                problem.setTitle("Validation failed");
+                problem.setProperty("errors", errors);
+
+                return handleExceptionInternal(
+                                exception,
+                                problem,
+                                headers,
+                                status,
+                                request);
+        }
+
+        public record FieldValidationError(String field, String message) {
+        }
 }
