@@ -15,8 +15,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.cgaraydev.incidentapi.PostgresTestConfiguration;
+import org.springframework.context.annotation.Import;
+
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(PostgresTestConfiguration.class)
 class IncidentApiTest {
 
         @Autowired
