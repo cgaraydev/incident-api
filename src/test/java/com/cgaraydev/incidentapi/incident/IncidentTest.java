@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.UUID;
+
 class IncidentTest {
 
     private static final Instant NOW = Instant.parse("2026-10-22T16:00:00Z");
@@ -142,5 +144,28 @@ class IncidentTest {
 
         assertEquals(IncidentStatus.IN_PROGRESS, incident.getStatus());
         assertEquals(lastUpdate, incident.getUpdatedAt());
+    }
+
+    @Test
+    void restoresAnExistingIncidentWithoutResettingItsData() {
+        UUID id = UUID.randomUUID();
+        Instant updatedAt = NOW.plusSeconds(60);
+
+        Incident incident = Incident.restore(
+                id,
+                "Equipo no enciende",
+                "La pantalla permanece apagada.",
+                IncidentStatus.RESOLVED,
+                NOW,
+                updatedAt);
+
+        assertEquals(id, incident.getId());
+        assertEquals("Equipo no enciende", incident.getTitle());
+        assertEquals(
+                "La pantalla permanece apagada.",
+                incident.getDescription());
+        assertEquals(IncidentStatus.RESOLVED, incident.getStatus());
+        assertEquals(NOW, incident.getCreatedAt());
+        assertEquals(updatedAt, incident.getUpdatedAt());
     }
 }

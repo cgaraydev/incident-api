@@ -12,14 +12,12 @@ public record IncidentResponse(
         Instant updatedAt) {
 
     public static IncidentResponse from(Incident incident) {
-        synchronized (incident) {
-            return new IncidentResponse(
-                    incident.getId(),
-                    incident.getTitle(),
-                    incident.getDescription(),
-                    incident.getStatus(),
-                    incident.getCreatedAt(),
-                    incident.getUpdatedAt());
-        }
+        return new IncidentResponse(
+                incident.getId(),
+                incident.getTitle(),
+                incident.getDescription(),
+                incident.getStatus(),
+                incident.getCreatedAt(),
+                incident.getUpdatedAt());
     }
 }
