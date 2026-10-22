@@ -18,39 +18,36 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RequestMapping("/api/incidents")
 public class IncidentController {
 
-    private final IncidentService service;
+        private final IncidentService service;
 
-    public IncidentController(IncidentService service) {
-        this.service = service;
-    }
+        public IncidentController(IncidentService service) {
+                this.service = service;
+        }
 
-    @PostMapping
-    public ResponseEntity<IncidentResponse> create(
-            @Valid @RequestBody CreateIncidentRequest request
-    ) {
-        Incident incident = service.create(
-                request.title(),
-                request.description()
-        );
+        @PostMapping
+        public ResponseEntity<IncidentResponse> create(
+                        @Valid @RequestBody CreateIncidentRequest request) {
+                Incident incident = service.create(
+                                request.title(),
+                                request.description());
 
-        URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(incident.getId())
-                .toUri();
+                URI location = ServletUriComponentsBuilder
+                                .fromCurrentRequest()
+                                .path("/{id}")
+                                .buildAndExpand(incident.getId())
+                                .toUri();
 
-        return ResponseEntity
-                .created(location)
-                .body(IncidentResponse.from(incident));
-    }
+                return ResponseEntity
+                                .created(location)
+                                .body(IncidentResponse.from(incident));
+        }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<IncidentResponse> findById(
-            @PathVariable("id") UUID id
-    ) {
-        return service.findById(id)
-                .map(IncidentResponse::from)
-                .map(response -> ResponseEntity.ok(response))
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
+        @GetMapping("/{id}")
+        public ResponseEntity<IncidentResponse> findById(
+                        @PathVariable("id") UUID id) {
+                Incident incident = service.findById(id)
+                                .orElseThrow(() -> new IncidentNotFoundException(id));
+
+                return ResponseEntity.ok(IncidentResponse.from(incident));
+        }
 }
