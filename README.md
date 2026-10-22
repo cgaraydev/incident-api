@@ -3,8 +3,21 @@
 API de gestión de incidencias técnicas desarrollada como proyecto de
 portafolio y aprendizaje con Java, Spring Boot y PostgreSQL.
 
-Permite registrar incidencias, consultarlas por identificador y actualizar
-su estado aplicando reglas de negocio.
+Permite registrar incidencias, consultarlas por identificador, actualizar
+su estado mediante reglas de negocio y solicitar sugerencias de categoría
+y resumen mediante Gemini.
+
+## Desarrollo asistido por IA
+
+Este proyecto se diseña y desarrolla con asistencia de ChatGPT 6.1,
+incluyendo propuestas de arquitectura, generación y revisión de código,
+diseño de pruebas y documentación.
+
+El autor integra las propuestas en su entorno local, ejecuta las pruebas
+y verifica el comportamiento de la aplicación como parte de su aprendizaje.
+
+ChatGPT 6.1 participa como herramienta de desarrollo. Gemini es el proveedor
+de IA integrado en la aplicación para analizar incidencias.
 
 ## Tecnologías
 
@@ -100,6 +113,7 @@ Flyway aplica automáticamente las migraciones pendientes al arrancar.
 | POST | `/api/incidents` | Crear una incidencia |
 | GET | `/api/incidents/{id}` | Consultar una incidencia |
 | PATCH | `/api/incidents/{id}/status` | Cambiar su estado |
+| POST | `/api/incidents/{id}/analysis` | Sugerir categoría y resumen mediante Gemini |
 
 `/api/status` no comprueba la salud de PostgreSQL.
 
@@ -137,6 +151,68 @@ Invoke-RestMethod `
     -Body '{"status":"IN_PROGRESS"}' | ConvertTo-Json
 ```
 
+## Análisis opcional con Gemini
+
+El análisis está desactivado por defecto. Las operaciones de creación,
+consulta y cambio de estado funcionan sin configurar Gemini.
+
+Para habilitarlo, configura las siguientes variables en la misma terminal
+donde arrancarás Java. También debe estar definida `DB_PASSWORD`,
+como se explica en la preparación local.
+
+```powershell
+$apiKey = Read-Host "Clave de Gemini" -AsSecureString
+$env:GOOGLE_API_KEY = [System.Net.NetworkCredential]::new("", $apiKey).Password
+Remove-Variable apiKey
+
+$env:GEMINI_MODEL = "gemini-3.5-flash-lite"
+
+.\mvnw.cmd "-Dspring-boot.run.profiles=local" "-Dspring-boot.run.arguments=--app.analysis.enabled=true" spring-boot:run
+```
+
+El modelo indicado es el utilizado en las comprobaciones manuales.
+Su disponibilidad y cuota dependen del proyecto de Google.
+
+No incluyas claves reales en el código ni en archivos versionados.
+
+Con una incidencia creada mediante los ejemplos anteriores:
+
+```powershell
+Invoke-RestMethod `
+    -Method Post `
+    -Uri "$incidentUrl/analysis" |
+    ConvertTo-Json
+```
+
+Ejemplo de respuesta:
+
+```json
+{
+  "suggestedCategory": "HARDWARE",
+  "suggestedSummary": "El equipo no enciende y la pantalla permanece apagada."
+}
+```
+
+Las categorías disponibles son `HARDWARE`, `SOFTWARE`, `NETWORK`,
+`ACCESS` y `OTHER`.
+
+El análisis envía el título y la descripción al proveedor externo.
+Usa únicamente datos ficticios.
+
+La respuesta contiene sugerencias: no modifica ni guarda cambios en
+la incidencia. Tampoco cambia su estado o sus fechas.
+
+La aplicación valida la estructura de la respuesta, las categorías
+permitidas y la longitud máxima del resumen de 500 caracteres.
+Estas validaciones no garantizan la exactitud del contenido generado.
+
+La configuración predeterminada establece un timeout de 20 segundos
+y un máximo de 512 tokens de salida. El cliente realiza un solo intento.
+
+Si el análisis está desactivado, falla el proveedor, vence el timeout
+o la respuesta resulta inválida, el endpoint devuelve `503`.
+Una incidencia inexistente devuelve `404`.
+
 ## Reglas de negocio
 
 - Una incidencia nace en `OPEN`.
@@ -162,6 +238,7 @@ Los errores tratados por la capa web utilizan ProblemDetail.
 - `400`: entrada inválida, como campos ausentes o UUID mal formado.
 - `404`: incidencia inexistente.
 - `409`: transición incompatible con el estado actual.
+- `503`: análisis desactivado o temporalmente no disponible.
 
 Los errores de validación incluyen una lista `errors` con el campo
 y el mensaje correspondiente.
@@ -200,7 +277,12 @@ Las pruebas con Spring utilizan PostgreSQL temporal mediante
 Testcontainers, con puertos y credenciales propios. No utilizan la base
 de desarrollo ni requieren `DB_PASSWORD`.
 
-La suite incluye reglas del modelo, contratos HTTP y operaciones JDBC.
+La suite incluye reglas del modelo, contratos HTTP, operaciones JDBC,
+validación de respuestas de análisis y comportamiento del adaptador Gemini.
+
+Las pruebas del adaptador utilizan un servidor HTTP local que simula
+respuestas válidas, errores del proveedor y timeouts. No requieren una
+clave de Gemini ni realizan llamadas a Google.
 
 ## Detener el entorno
 
@@ -230,19 +312,27 @@ Implementado y comprobado:
 - Creación, consulta y actualización de estado.
 - Validación y errores estructurados.
 - Persistencia PostgreSQL y migraciones Flyway.
-- Suite de 29 pruebas correctas al completar este hito.
 - Recuperación de una incidencia después de reiniciar la API.
+- Análisis opcional mediante Gemini.
+- Pruebas automatizadas del modelo, API, persistencia y adaptador de IA.
+- Manejo de respuestas inválidas, errores del proveedor y timeouts.
 
-Pendiente:
+Las comprobaciones manuales con Gemini incluyeron un problema de red,
+un reporte con información insuficiente y un reporte con instrucciones
+para manipular el análisis. En estos casos se obtuvieron las categorías
+esperadas y la incidencia permaneció intacta.
 
-- Prueba específica de concurrencia.
-- Autenticación y autorización.
-- Integración con Gemini.
-- Imagen Docker de la API y despliegue en Google Cloud.
-- Procesamiento asíncrono mediante Pub/Sub.
+Estos ejemplos no constituyen una evaluación exhaustiva de precisión
+ni garantizan resistencia frente a todas las instrucciones maliciosas.
+
+Limitaciones actuales:
+
+- Sin autenticación ni autorización.
+- Sin interfaz gráfica.
+- Las sugerencias de análisis no se almacenan.
+- Sin límites de solicitudes por usuario.
+- Sin prueba automatizada específica de concurrencia.
+- Sin imagen Docker de la API ni despliegue en Google Cloud.
 
 Usar únicamente datos ficticios. La aplicación todavía no está preparada
 para exponerse como servicio público.
-
-Próximo hito: completar las verificaciones relevantes de persistencia y
-preparar la integración con Gemini.
