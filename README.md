@@ -186,8 +186,29 @@ Después arranca Java siguiendo las instrucciones de ejecución local.
 | GET    | `/api/incidents/{id}`          | Consultar una incidencia                    |
 | PATCH  | `/api/incidents/{id}/status`   | Cambiar su estado                           |
 | POST   | `/api/incidents/{id}/analysis` | Sugerir categoría y resumen mediante Gemini |
+| GET    | `/api/incidents`               | Listar incidencias con paginación           |
 
 `/api/status` no comprueba la salud de PostgreSQL.
+
+### Listar incidencias
+
+```powershell
+Invoke-RestMethod `
+    "http://localhost:8080/api/incidents?page=0&size=20" |
+    ConvertTo-Json -Depth 5
+```
+
+- `page`: número de página desde 0. Predeterminado: 0.
+- `size`: elementos por página, entre 1 y 100. Predeterminado: 20.
+- Orden: fecha de creación descendente y UUID descendente como desempate.
+- Respuesta: `content`, `page`, `size` y `hasNext`.
+- Una página sin resultados devuelve `200` con `content` vacío.
+- Los parámetros inválidos devuelven `400`.
+
+`hasNext` indica si existe otra página; no se devuelve el total de registros.
+
+La paginación utiliza OFFSET. Si se crean incidencias entre consultas,
+los resultados pueden desplazarse entre páginas.
 
 ### Crear y consultar una incidencia
 
@@ -405,6 +426,7 @@ Limitaciones actuales:
 - Las sugerencias de análisis no se almacenan.
 - Sin límites de solicitudes por usuario.
 - Sin prueba automatizada específica de concurrencia.
+- Sin despliegue en Google Cloud.
 
 Usar únicamente datos ficticios. La aplicación todavía no está preparada
 para exponerse como servicio público.

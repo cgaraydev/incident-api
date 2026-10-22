@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
@@ -87,4 +88,18 @@ public class JdbcIncidentRepository {
                     "Expected to update exactly one incident");
         }
     }
+
+    public List<Incident> findPage(int limit, long offset) {
+        return jdbc.sql("""
+                SELECT id, title, description, status, created_at, updated_at
+                FROM incidents
+                ORDER BY created_at DESC, id DESC
+                LIMIT :limit OFFSET :offset
+                """)
+                .param("limit", limit)
+                .param("offset", offset)
+                .query(this::mapRow)
+                .list();
+    }
+
 }

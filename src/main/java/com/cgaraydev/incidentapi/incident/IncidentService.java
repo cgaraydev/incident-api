@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,5 +48,29 @@ public class IncidentService {
     @Transactional(readOnly = true)
     public Optional<Incident> findById(UUID id) {
         return repository.findById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public IncidentPageResponse findPage(int page, int size) {
+        if (page < 0) {
+            throw new IllegalArgumentException("Page must not be negative");
+        }
+
+        if (size < 1 || size > 100) {
+            throw new IllegalArgumentException(
+                    "Size must be between 1 and 100");
+        }
+
+        long offset = (long) page * size;
+        List<Incident> incidents = repository.findPage(size + 1, offset);
+
+        boolean hasNext = incidents.size() > size;
+
+        List<IncidentResponse> content = incidents.stream()
+                .limit(size)
+                .map(IncidentResponse::from)
+                .toList();
+
+        return new IncidentPageResponse(content, page, size, hasNext);
     }
 }
