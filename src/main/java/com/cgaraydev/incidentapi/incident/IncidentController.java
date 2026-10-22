@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
@@ -22,6 +23,15 @@ public class IncidentController {
 
         public IncidentController(IncidentService service) {
                 this.service = service;
+        }
+
+        @PatchMapping("/{id}/status")
+        public ResponseEntity<IncidentResponse> changeStatus(
+                        @PathVariable("id") UUID id,
+                        @Valid @RequestBody ChangeIncidentStatusRequest request) {
+                Incident incident = service.changeStatus(id, request.status());
+
+                return ResponseEntity.ok(IncidentResponse.from(incident));
         }
 
         @PostMapping

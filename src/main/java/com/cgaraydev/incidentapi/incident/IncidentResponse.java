@@ -9,17 +9,17 @@ public record IncidentResponse(
         String description,
         IncidentStatus status,
         Instant createdAt,
-        Instant updatedAt
-) {
+        Instant updatedAt) {
 
     public static IncidentResponse from(Incident incident) {
-        return new IncidentResponse(
-                incident.getId(),
-                incident.getTitle(),
-                incident.getDescription(),
-                incident.getStatus(),
-                incident.getCreatedAt(),
-                incident.getUpdatedAt()
-        );
+        synchronized (incident) {
+            return new IncidentResponse(
+                    incident.getId(),
+                    incident.getTitle(),
+                    incident.getDescription(),
+                    incident.getStatus(),
+                    incident.getCreatedAt(),
+                    incident.getUpdatedAt());
+        }
     }
 }

@@ -35,9 +35,12 @@ public final class Incident {
     }
 
     public void changeStatus(IncidentStatus target, Instant now) {
+        if (target == null) {
+            throw new IllegalArgumentException("Target status must not be null");
+        }
+
         if (!status.canTransitionTo(target)) {
-            throw new IllegalArgumentException(
-                    "Cannot transition from " + status + " to " + target);
+            throw new InvalidIncidentStatusTransitionException(status, target);
         }
 
         if (status == target) {

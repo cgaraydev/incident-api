@@ -19,10 +19,20 @@ public class IncidentService {
         Incident incident = Incident.create(
                 title,
                 description,
-                Instant.now()
-        );
+                Instant.now());
 
         repository.save(incident);
+
+        return incident;
+    }
+
+    public Incident changeStatus(UUID id, IncidentStatus target) {
+        Incident incident = repository.findById(id)
+                .orElseThrow(() -> new IncidentNotFoundException(id));
+
+        synchronized (incident) {
+            incident.changeStatus(target, Instant.now());
+        }
 
         return incident;
     }

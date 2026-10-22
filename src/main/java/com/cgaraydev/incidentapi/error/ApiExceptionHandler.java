@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.WebRequest;
+import com.cgaraydev.incidentapi.incident.InvalidIncidentStatusTransitionException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
@@ -24,6 +25,18 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                 exception.getMessage());
 
         problem.setTitle("Incident not found");
+
+        return problem;
+    }
+
+    @ExceptionHandler(InvalidIncidentStatusTransitionException.class)
+    public ProblemDetail handleInvalidStatusTransition(
+            InvalidIncidentStatusTransitionException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                exception.getMessage());
+
+        problem.setTitle("Invalid status transition");
 
         return problem;
     }

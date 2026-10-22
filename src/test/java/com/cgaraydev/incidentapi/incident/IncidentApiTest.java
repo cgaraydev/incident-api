@@ -22,6 +22,112 @@ class IncidentApiTest {
         @Autowired
         private MockMvc mockMvc;
 
+        private String createIncidentLocation() throws Exception {
+                MvcResult result = mockMvc.perform(post("/api/incidents")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "title": "Equipo no enciende",
+                                                  "description": "La pantalla permanece apagada."
+                                                }
+                                                """))
+                                .andExpect(status().isCreated())
+                                .andReturn();
+
+                String location = result.getResponse().getHeader("Location");
+                assertNotNull(location);
+
+                return location;
+        }
+
+        @Test
+        void changesStatusAndPersistsItForSubsequentQueries() throws Exception {
+                String location = createIncidentLocation();
+
+                MvcResult updated = mockMvc.perform(patch(URI.create(location + "/status"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {"status": "IN_PROGRESS"}
+                                                """))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value("IN_PROGRESS"))
+                                .andReturn();
+
+                mockMvc.perform(get(URI.create(location)))
+                                .andExpect(status().isOk())
+                                .andExpect(content().json(
+                                                updated.getResponse().getContentAsString()));
+        }
+
+        @Test
+        void rejectsInvalidTransitionWithoutChangingTheStoredIncident()
+                        throws Exception {
+                String location = createIncidentLocation();
+
+                MvcResult before = mockMvc.perform(get(URI.create(location)))
+                                .andExpect(status().isOk())
+                                .andReturn();
+
+                mockMvc.perform(patch(URI.create(location + "/status"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {"status": "RESOLVED"}
+                                                """))
+                                .andExpect(status().isConflict())
+                                .andExpect(content().contentTypeCompatibleWith(
+                                                MediaType.APPLICATION_PROBLEM_JSON))
+                                .andExpect(jsonPath("$.title").value("Invalid status transition"))
+                                .andExpect(jsonPath("$.status").value(409))
+                                .andExpect(jsonPath("$.detail")
+                                                .value("Cannot transition from OPEN to RESOLVED"))
+                                .andExpect(jsonPath("$.instance")
+                                                .value(URI.create(location).getPath() + "/status"));
+
+                mockMvc.perform(get(URI.create(location)))
+                                .andExpect(status().isOk())
+                                .andExpect(content().json(
+                                                before.getResponse().getContentAsString()));
+        }
+
+        @Test
+        void cannotChangeStatusOfAnUnknownIncident() throws Exception {
+                mockMvc.perform(patch("/api/incidents/{id}/status", UUID.randomUUID())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {"status": "IN_PROGRESS"}
+                                                """))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.title").value("Incident not found"));
+        }
+
+        @Test
+        void rejectsMissingTargetStatus() throws Exception {
+                String location = createIncidentLocation();
+
+                mockMvc.perform(patch(URI.create(location + "/status"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{}"))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.title").value("Validation failed"))
+                                .andExpect(jsonPath("$.errors[0].field").value("status"))
+                                .andExpect(jsonPath("$.errors[0].message")
+                                                .value("Status must not be null"));
+        }
+
+        @Test
+        void rejectsUnknownTargetStatus() throws Exception {
+                String location = createIncidentLocation();
+
+                mockMvc.perform(patch(URI.create(location + "/status"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {"status": "FINISHED"}
+                                                """))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(content().contentTypeCompatibleWith(
+                                                MediaType.APPLICATION_PROBLEM_JSON));
+        }
+
         @Test
         void createsAnIncidentAndRetrievesItFromItsLocation() throws Exception {
                 MvcResult created = mockMvc.perform(post("/api/incidents")
