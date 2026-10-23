@@ -236,6 +236,22 @@ Invoke-RestMethod `
 La paginación utiliza OFFSET. Si se crean incidencias entre consultas,
 los resultados pueden desplazarse entre páginas.
 
+El parámetro opcional `status` permite filtrar por `OPEN`, `IN_PROGRESS`
+o `RESOLVED`. Si se omite, se incluyen todos los estados.
+Un estado desconocido devuelve `400`.
+
+El filtro se aplica antes de paginar; `hasNext` considera únicamente
+las incidencias que coinciden.
+
+```powershell
+Invoke-RestMethod `
+    "http://localhost:8080/api/incidents?status=OPEN&page=0&size=3" |
+    ConvertTo-Json -Depth 5
+```
+
+La interfaz permite seleccionar Todas, Abiertas, En atención o Resueltas.
+Al cambiar el filtro, vuelve a la primera página.
+
 ### Crear y consultar una incidencia
 
 En otra terminal:

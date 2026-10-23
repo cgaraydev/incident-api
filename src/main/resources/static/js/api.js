@@ -1,8 +1,12 @@
-export async function fetchIncidentPage(page, size = 3) {
+export async function fetchIncidentPage(page, status = "", size = 3) {
     const params = new URLSearchParams({
         page: String(page),
         size: String(size)
     });
+
+    if (status) {
+        params.set("status", status);
+    }
 
     const response = await fetch(`/api/incidents?${params}`, {
         headers: { Accept: "application/json" }

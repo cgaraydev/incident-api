@@ -89,17 +89,34 @@ public class JdbcIncidentRepository {
         }
     }
 
-    public List<Incident> findPage(int limit, long offset) {
-        return jdbc.sql("""
+    public List<Incident> findPage(
+            int limit,
+            long offset,
+            IncidentStatus status) {
+
+        String sql = """
                 SELECT id, title, description, status, created_at, updated_at
                 FROM incidents
-                ORDER BY created_at DESC, id DESC
-                LIMIT :limit OFFSET :offset
-                """)
+                """;
+
+        if (status != null) {
+            sql += " WHERE status = :status";
+        }
+
+        sql += """
+                 ORDER BY created_at DESC, id DESC
+                 LIMIT :limit OFFSET :offset
+                """;
+
+        var query = jdbc.sql(sql)
                 .param("limit", limit)
-                .param("offset", offset)
-                .query(this::mapRow)
-                .list();
+                .param("offset", offset);
+
+        if (status != null) {
+            query = query.param("status", status.name());
+        }
+
+        return query.query(this::mapRow).list();
     }
 
 }

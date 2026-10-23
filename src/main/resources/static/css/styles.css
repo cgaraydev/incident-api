@@ -375,3 +375,28 @@ body.modal-open {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
+
+.list-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 24px 20px;
+}
+
+.list-filters label {
+    font-weight: 600;
+}
+
+.list-filters select {
+    padding: 10px 14px;
+    border: 1px solid #c4cedc;
+    border-radius: 8px;
+    background: white;
+    color: inherit;
+    font: inherit;
+}
+
+.list-filters select:focus-visible {
+    outline: 3px solid #3158b5;
+    outline-offset: 2px;
+}

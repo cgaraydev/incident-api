@@ -8,7 +8,8 @@ const elements = {
     feedback: document.querySelector("#feedback"),
     pageLabel: document.querySelector("#page-label"),
     tableContainer: document.querySelector("#table-container"),
-    rows: document.querySelector("#incidents")
+    rows: document.querySelector("#incidents"),
+    statusFilter: document.querySelector("#status-filter")
 };
 
 const creation = {
@@ -42,6 +43,7 @@ function updateControls() {
     elements.refresh.disabled = busy;
     elements.previous.disabled = busy || currentPage === 0;
     elements.next.disabled = busy || !hasNext;
+    elements.statusFilter.disabled = busy;
     creation.submit.disabled = busy;
 }
 
@@ -91,9 +93,10 @@ async function loadPage(page) {
     elements.tableContainer.setAttribute("aria-busy", "true");
     elements.feedback.classList.remove("error");
     elements.feedback.textContent = "Cargando incidencias…";
+    elements.tableContainer.hidden = true;
 
     try {
-        const result = await fetchIncidentPage(page);
+        const result = await fetchIncidentPage(page, elements.statusFilter.value);
 
         renderIncidents(result.content);
         currentPage = result.page;
@@ -101,9 +104,7 @@ async function loadPage(page) {
 
         elements.pageLabel.textContent = `Página ${currentPage + 1}`;
         elements.tableContainer.hidden = result.content.length === 0;
-        elements.feedback.textContent = result.content.length === 0
-            ? "No hay incidencias en esta página."
-            : "";
+        elements.feedback.textContent = result.content.length === 0 ? "No hay incidencias para esta página y filtro." : "";
     } catch (error) {
         elements.feedback.classList.add("error");
         elements.feedback.textContent =
@@ -155,14 +156,13 @@ async function handleCreate(event) {
         );
 
         creation.form.reset();
-        creation.feedback.textContent =
-            `Incidencia creada: ${incident.title}.`;
+        elements.statusFilter.value = "";
+        creation.feedback.textContent = `Incidencia creada: ${incident.title}.`;
 
         await loadPage(0);
     } catch (error) {
         creation.feedback.classList.add("error");
-        creation.feedback.textContent =
-            `${error.message} Si hubo un problema de conexión, actualiza el listado antes de repetir el envío para comprobar si se guardó.`;
+        creation.feedback.textContent = `${error.message} Si hubo un problema de conexión, actualiza el listado antes de repetir el envío para comprobar si se guardó.`;
     } finally {
         submitting = false;
         creation.fields.disabled = false;
@@ -174,6 +174,13 @@ async function handleCreate(event) {
 
 creation.form.addEventListener("submit", handleCreate);
 
-document.addEventListener("incident-updated", () => loadPage(currentPage));
+document.addEventListener("incident-updated", () => loadPage(0));
+
+elements.statusFilter.addEventListener("change", () => {
+    currentPage = 0;
+    hasNext = false;
+    elements.pageLabel.textContent = "";
+    loadPage(0);
+});
 
 loadPage(0);

@@ -67,7 +67,8 @@ public class IncidentController {
         @GetMapping
         public ResponseEntity<IncidentPageResponse> findPage(
                         @RequestParam(name = "page", defaultValue = "0") int page,
-                        @RequestParam(name = "size", defaultValue = "20") int size) {
+                        @RequestParam(name = "size", defaultValue = "20") int size,
+                        @RequestParam(name = "status", required = false) IncidentStatus status) {
 
                 if (page < 0 || size < 1 || size > 100) {
                         throw new ResponseStatusException(
@@ -75,6 +76,6 @@ public class IncidentController {
                                         "Page must be non-negative and size must be between 1 and 100");
                 }
 
-                return ResponseEntity.ok(service.findPage(page, size));
+                return ResponseEntity.ok(service.findPage(page, size, status));
         }
 }

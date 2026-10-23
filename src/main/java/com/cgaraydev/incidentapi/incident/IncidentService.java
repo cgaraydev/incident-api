@@ -51,7 +51,11 @@ public class IncidentService {
     }
 
     @Transactional(readOnly = true)
-    public IncidentPageResponse findPage(int page, int size) {
+    public IncidentPageResponse findPage(
+            int page,
+            int size,
+            IncidentStatus status) {
+
         if (page < 0) {
             throw new IllegalArgumentException("Page must not be negative");
         }
@@ -62,7 +66,11 @@ public class IncidentService {
         }
 
         long offset = (long) page * size;
-        List<Incident> incidents = repository.findPage(size + 1, offset);
+
+        List<Incident> incidents = repository.findPage(
+                size + 1,
+                offset,
+                status);
 
         boolean hasNext = incidents.size() > size;
 
