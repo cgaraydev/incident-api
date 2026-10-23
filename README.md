@@ -177,6 +177,32 @@ docker compose up -d postgres
 
 Después arranca Java siguiendo las instrucciones de ejecución local.
 
+## Interfaz web
+
+Con la aplicación arrancada, abre:
+
+http://localhost:8080/
+
+La interfaz utiliza HTML, CSS y módulos JavaScript servidos por Spring Boot.
+No requiere Node.js ni un servidor frontend adicional.
+
+Permite:
+
+- Crear incidencias con título y descripción.
+- Consultar el listado paginado.
+- Abrir el detalle en un modal.
+- Cambiar el estado mediante las transiciones permitidas.
+- Solicitar categoría y resumen sugeridos por Gemini cuando está habilitado.
+
+El análisis no modifica la incidencia y sus sugerencias no se almacenan.
+
+Durante el desarrollo, si el navegador muestra una versión anterior,
+abre las herramientas de desarrollo, activa “Disable cache” en Network
+y recarga la página.
+
+Los cambios de HTML, CSS y JavaScript también requieren regenerar el JAR
+y reconstruir la imagen cuando se ejecuta la aplicación en Docker.
+
 ## Endpoints
 
 | Método | Ruta                           | Resultado                                   |
@@ -306,6 +332,74 @@ Si el análisis está desactivado, falla el proveedor, vence el timeout
 o la respuesta resulta inválida, el endpoint devuelve `503`.
 Una incidencia inexistente devuelve `404`.
 
+### Activar Gemini con Docker Compose
+
+Parte del entorno Docker preparado y de una imagen construida según
+las instrucciones anteriores.
+
+En PowerShell:
+
+```powershell
+$apiKey = Read-Host "Clave de Gemini" -AsSecureString
+$env:GOOGLE_API_KEY = [System.Net.NetworkCredential]::new("", $apiKey).Password.Trim()
+Remove-Variable apiKey
+
+$env:GEMINI_MODEL = "gemini-3.5-flash-lite"
+
+docker compose -f compose.yaml -f compose.gemini.yaml --profile app up -d
+```
+
+Introduce la clave cuando aparezca la pregunta, sin comillas.
+Las variables pertenecen a esta sesión de PowerShell.
+
+Compose combina la configuración principal con `compose.gemini.yaml`
+y proporciona las variables al contenedor de la API.
+
+Espera al mensaje `Started IncidentApiApplication` antes de utilizarla:
+
+```powershell
+docker compose logs -f --tail=40 api
+```
+
+Pulsa `Ctrl + C` para dejar de seguir los logs sin detener el contenedor.
+
+Abre una incidencia desde la interfaz y pulsa “Analizar con Gemini”.
+
+Para aplicar cambios de código manteniendo Gemini habilitado:
+
+```powershell
+.\mvnw.cmd --batch-mode --no-transfer-progress verify
+docker compose -f compose.yaml -f compose.gemini.yaml --profile app up -d --build
+```
+
+Para reemplazar la clave del contenedor, define de nuevo `GOOGLE_API_KEY`
+en la terminal y recrea la API:
+
+```powershell
+docker compose -f compose.yaml -f compose.gemini.yaml --profile app up -d --force-recreate api
+```
+
+Un reinicio del contenedor no actualiza sus variables de entorno.
+
+Para volver al modo sin Gemini:
+
+```powershell
+docker compose --profile app up -d
+```
+
+Los fallos del analizador se registran con el código HTTP o el tipo
+de excepción, sin incluir deliberadamente la clave ni el contenido
+del reporte:
+
+```powershell
+docker compose logs --since=2m api |
+    Select-String "Gemini analysis failed"
+```
+
+En una comprobación local, Google devolvió `API_KEY_INVALID`.
+Se resolvió introduciendo una clave válida y recreando la API.
+No fue necesario cambiar el modelo ni activar facturación.
+
 ## Reglas de negocio
 
 - Una incidencia nace en `OPEN`.
@@ -410,6 +504,9 @@ Implementado y comprobado:
 - Pruebas automatizadas del modelo, API, persistencia y adaptador de IA.
 - Manejo de respuestas inválidas, errores del proveedor y timeouts.
 - Imagen Docker de la API y ejecución conjunta con PostgreSQL mediante Compose.
+- Interfaz web con creación, listado paginado y detalle modal.
+- Cambio de estado y análisis con Gemini desde la interfaz.
+- CI con verificación Maven y construcción de la imagen Docker.
 
 Las comprobaciones manuales con Gemini incluyeron un problema de red,
 un reporte con información insuficiente y un reporte con instrucciones
@@ -422,7 +519,6 @@ ni garantizan resistencia frente a todas las instrucciones maliciosas.
 Limitaciones actuales:
 
 - Sin autenticación ni autorización.
-- Sin interfaz gráfica.
 - Las sugerencias de análisis no se almacenan.
 - Sin límites de solicitudes por usuario.
 - Sin prueba automatizada específica de concurrencia.
