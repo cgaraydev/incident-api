@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="/css/styles.css">
     <script type="module" src="/js/app.js"></script>
 </head>
+
 <body>
     <main class="container">
         <header class="header">
@@ -20,14 +22,41 @@
             <button id="refresh" type="button">Actualizar</button>
         </header>
 
+        <section class="panel create-panel" aria-labelledby="create-title">
+            <div class="panel-header">
+                <h2 id="create-title">Nueva incidencia</h2>
+            </div>
+
+            <form id="create-form" class="incident-form">
+                <fieldset id="create-fields">
+                    <legend class="sr-only">Datos de la incidencia</legend>
+
+                    <label for="incident-title">Título</label>
+                    <input id="incident-title" name="title" type="text" required maxlength="150"
+                        placeholder="Ejemplo: equipo sin conexión">
+
+                    <label for="incident-description">Descripción</label>
+                    <textarea id="incident-description" name="description" required maxlength="5000" rows="4"
+                        placeholder="Describe qué ocurre y los mensajes que aparecen."></textarea>
+
+                    <p class="form-help">Utiliza únicamente datos ficticios.</p>
+
+                    <button id="create-submit" type="submit">
+                        Crear incidencia
+                    </button>
+                </fieldset>
+
+                <p id="create-feedback" class="feedback" role="status" aria-live="polite"></p>
+            </form>
+        </section>
+
         <section class="panel" aria-labelledby="list-title">
             <div class="panel-header">
                 <h2 id="list-title">Reportes registrados</h2>
                 <span id="page-label"></span>
             </div>
 
-            <p id="feedback" class="feedback"
-               role="status" aria-live="polite"></p>
+            <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
 
             <div id="table-container" class="table-container" hidden>
                 <table>
@@ -58,4 +87,5 @@
         <footer>Proyecto de aprendizaje · Java, Spring Boot y PostgreSQL</footer>
     </main>
 </body>
+
 </html>

@@ -1,4 +1,4 @@
-import { fetchIncidentPage } from "./api.js";
+import { fetchIncidentPage, createIncident } from "./api.js";
 
 const elements = {
     refresh: document.querySelector("#refresh"),
@@ -8,6 +8,15 @@ const elements = {
     pageLabel: document.querySelector("#page-label"),
     tableContainer: document.querySelector("#table-container"),
     rows: document.querySelector("#incidents")
+};
+
+const creation = {
+    form: document.querySelector("#create-form"),
+    fields: document.querySelector("#create-fields"),
+    title: document.querySelector("#incident-title"),
+    description: document.querySelector("#incident-description"),
+    submit: document.querySelector("#create-submit"),
+    feedback: document.querySelector("#create-feedback")
 };
 
 const statuses = {
@@ -24,11 +33,15 @@ const dateFormatter = new Intl.DateTimeFormat("es-CL", {
 let currentPage = 0;
 let hasNext = false;
 let loading = false;
+let submitting = false;
 
 function updateControls() {
-    elements.refresh.disabled = loading;
-    elements.previous.disabled = loading || currentPage === 0;
-    elements.next.disabled = loading || !hasNext;
+    const busy = loading || submitting;
+
+    elements.refresh.disabled = busy;
+    elements.previous.disabled = busy || currentPage === 0;
+    elements.next.disabled = busy || !hasNext;
+    creation.submit.disabled = busy;
 }
 
 function renderIncidents(incidents) {
@@ -100,5 +113,60 @@ async function loadPage(page) {
 elements.refresh.addEventListener("click", () => loadPage(currentPage));
 elements.previous.addEventListener("click", () => loadPage(currentPage - 1));
 elements.next.addEventListener("click", () => loadPage(currentPage + 1));
+
+async function handleCreate(event) {
+    event.preventDefault();
+
+    if (submitting || loading) return;
+
+    creation.feedback.classList.remove("error");
+    creation.feedback.textContent = "";
+
+    if (!creation.title.value.trim()) {
+        creation.feedback.classList.add("error");
+        creation.feedback.textContent = "El título no puede estar vacío.";
+        creation.title.focus();
+        return;
+    }
+
+    if (!creation.description.value.trim()) {
+        creation.feedback.classList.add("error");
+        creation.feedback.textContent = "La descripción no puede estar vacía.";
+        creation.description.focus();
+        return;
+    }
+
+    submitting = true;
+    creation.fields.disabled = true;
+    creation.form.setAttribute("aria-busy", "true");
+    creation.submit.textContent = "Guardando…";
+    creation.feedback.textContent = "Creando incidencia…";
+    updateControls();
+
+    try {
+        const incident = await createIncident(
+            creation.title.value,
+            creation.description.value
+        );
+
+        creation.form.reset();
+        creation.feedback.textContent =
+            `Incidencia creada: ${incident.title}.`;
+
+        await loadPage(0);
+    } catch (error) {
+        creation.feedback.classList.add("error");
+        creation.feedback.textContent =
+            `${error.message} Si hubo un problema de conexión, actualiza el listado antes de repetir el envío para comprobar si se guardó.`;
+    } finally {
+        submitting = false;
+        creation.fields.disabled = false;
+        creation.form.setAttribute("aria-busy", "false");
+        creation.submit.textContent = "Crear incidencia";
+        updateControls();
+    }
+}
+
+creation.form.addEventListener("submit", handleCreate);
 
 loadPage(0);
