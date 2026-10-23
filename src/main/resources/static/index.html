@@ -111,6 +111,33 @@
                 <dt>Última actualización</dt>
                 <dd id="detail-updated"></dd>
             </dl>
+            <section id="incident-analysis" class="analysis-section" aria-labelledby="analysis-heading" hidden>
+                <h3 id="analysis-heading">Análisis con Gemini</h3>
+
+                <p class="form-help">
+                    Envía el título y la descripción a Google para generar sugerencias.
+                    Utiliza únicamente datos ficticios.
+                </p>
+
+                <button id="analysis-run" type="button">Analizar con Gemini</button>
+
+                <p id="analysis-feedback" class="feedback" role="status" aria-live="polite"></p>
+
+                <div id="analysis-result" hidden>
+                    <p>
+                        <strong>Categoría sugerida:</strong>
+                        <span id="analysis-category"></span>
+                    </p>
+
+                    <p><strong>Resumen sugerido:</strong></p>
+                    <p id="analysis-summary"></p>
+
+                    <p class="form-help">
+                        Revisa las sugerencias. Pueden contener errores.
+                        La incidencia original permanece sin cambios.
+                    </p>
+                </div>
+            </section>
             <div id="detail-actions" class="detail-actions" hidden>
                 <button id="detail-change-status" type="button"></button>
             </div>

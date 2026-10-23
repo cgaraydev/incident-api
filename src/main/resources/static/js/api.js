@@ -108,3 +108,28 @@ export async function changeIncidentStatus(id, status) {
 
     return response.json();
 }
+
+export async function analyzeIncident(id, signal) {
+    const response = await fetch(
+        `/api/incidents/${encodeURIComponent(id)}/analysis`,
+        {
+            method: "POST",
+            headers: { Accept: "application/json" },
+            signal
+        }
+    );
+
+    if (!response.ok) {
+        if (response.status === 503) {
+            throw new Error(
+                "El análisis está desactivado o temporalmente no disponible."
+            );
+        }
+
+        throw new Error(
+            `No se pudo analizar la incidencia: HTTP ${response.status}.`
+        );
+    }
+
+    return response.json();
+}

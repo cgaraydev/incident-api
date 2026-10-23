@@ -1,4 +1,5 @@
 import { fetchIncident, changeIncidentStatus } from "./api.js";
+import { resetIncidentAnalysis, setAnalysisIncident } from "./analysis.js";
 
 const detail = {
     dialog: document.querySelector("#incident-detail"),
@@ -49,6 +50,8 @@ let saving = false;
 
 export async function openIncidentDetail(id, trigger) {
     if (saving) return;
+
+    resetIncidentAnalysis();
 
     currentIncident = undefined;
     detail.actions.hidden = true;
@@ -105,6 +108,8 @@ function renderIncident(incident) {
         dateFormatter.format(new Date(incident.updatedAt));
 
     currentIncident = incident;
+
+    setAnalysisIncident(incident.id);
 
     const transition = transitions[incident.status];
 

@@ -1,0 +1,6 @@
+services:
+  api:
+    environment:
+      APP_ANALYSIS_ENABLED: "true"
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:?Define GOOGLE_API_KEY in PowerShell}
+      GEMINI_MODEL: ${GEMINI_MODEL:?Define GEMINI_MODEL in PowerShell}

@@ -355,3 +355,23 @@ body.modal-open {
 .detail-actions button:hover:not(:disabled) {
     background: #1e3d80;
 }
+
+.analysis-section {
+    margin: 0 24px 24px;
+    padding-top: 20px;
+    border-top: 1px solid #dce3ed;
+}
+
+.analysis-section h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.analysis-section .feedback {
+    padding: 16px 0 0;
+}
+
+#analysis-summary {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
