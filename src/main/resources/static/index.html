@@ -84,6 +84,38 @@
             </nav>
         </section>
 
+        <dialog id="incident-detail" class="detail-dialog" aria-labelledby="detail-heading">
+            <div class="panel-header">
+                <h2 id="detail-heading" tabindex="-1">Detalle de incidencia</h2>
+                <button id="detail-close" type="button">Cerrar detalle</button>
+            </div>
+
+            <p id="detail-feedback" class="feedback" role="status" aria-live="polite"></p>
+
+            <dl id="detail-data" class="detail-data" hidden>
+                <dt>Título</dt>
+                <dd id="detail-title"></dd>
+
+                <dt>Identificador</dt>
+                <dd id="detail-id"></dd>
+
+                <dt>Descripción</dt>
+                <dd id="detail-description"></dd>
+
+                <dt>Estado</dt>
+                <dd id="detail-status"></dd>
+
+                <dt>Creación</dt>
+                <dd id="detail-created"></dd>
+
+                <dt>Última actualización</dt>
+                <dd id="detail-updated"></dd>
+            </dl>
+            <div id="detail-actions" class="detail-actions" hidden>
+                <button id="detail-change-status" type="button"></button>
+            </div>
+        </dialog>
+
         <footer>Proyecto de aprendizaje · Java, Spring Boot y PostgreSQL</footer>
     </main>
 </body>

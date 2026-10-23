@@ -1,4 +1,5 @@
 import { fetchIncidentPage, createIncident } from "./api.js";
+import { openIncidentDetail } from "./detail.js";
 
 const elements = {
     refresh: document.querySelector("#refresh"),
@@ -53,9 +54,13 @@ function renderIncidents(incidents) {
         const statusCell = document.createElement("td");
         const dateCell = document.createElement("td");
 
-        const title = document.createElement("span");
+        const title = document.createElement("button");
+        title.type = "button";
         title.className = "incident-title";
         title.textContent = incident.title;
+        title.addEventListener("click", () => {
+            openIncidentDetail(incident.id, title);
+        });
 
         const id = document.createElement("span");
         id.className = "incident-id";
@@ -168,5 +173,7 @@ async function handleCreate(event) {
 }
 
 creation.form.addEventListener("submit", handleCreate);
+
+document.addEventListener("incident-updated", () => loadPage(currentPage));
 
 loadPage(0);
