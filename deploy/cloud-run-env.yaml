@@ -1,4 +1,6 @@
 SPRING_PROFILES_ACTIVE: "neon"
-APP_ANALYSIS_ENABLED: "false"
+APP_ANALYSIS_ENABLED: "true"
 DB_USER: "neondb_owner"
 DB_URL: "jdbc:postgresql://ep-old-cloud-b65xwd5c.c-2.sa-east-1.aws.neon.tech/neondb?sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory"
+GEMINI_MODEL: "gemini-3.5-flash-lite"
+APP_ANALYSIS_TIMEOUT: "45s"
