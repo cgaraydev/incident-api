@@ -203,6 +203,78 @@ y recarga la página.
 Los cambios de HTML, CSS y JavaScript también requieren regenerar el JAR
 y reconstruir la imagen cuando se ejecuta la aplicación en Docker.
 
+## Despliegue en Google Cloud
+
+Despliegue verificado con:
+
+- Cloud Run en `us-central1`: API e interfaz web.
+- Artifact Registry: imagen Docker.
+- Neon Free en AWS São Paulo: PostgreSQL 18.6.
+- Secret Manager: contraseña PostgreSQL y clave de Gemini.
+- Cuenta de servicio propia para ejecutar la aplicación.
+
+El servicio exige autenticación mediante IAM. No está habilitado
+para acceso público anónimo.
+
+### Archivos de configuración
+
+- `deploy/cloud-run-env.yaml`: variables de ejecución de Spring.
+- `deploy/cloud-run-deploy.yaml`: imagen, recursos, acceso y referencias
+  a secretos.
+
+No contienen los valores de las contraseñas ni las claves.
+
+El despliegue requiere una imagen previamente subida a Artifact Registry,
+la cuenta de servicio y los secretos creados con sus permisos.
+
+Desde la raíz del repositorio:
+
+```powershell
+gcloud.cmd run deploy incident-api --flags-file=deploy/cloud-run-deploy.yaml
+```
+
+Este comando no compila el proyecto ni construye o sube una imagen.
+La referencia de imagen debe actualizarse cuando cambie el código.
+
+### Acceso autenticado desde el navegador
+
+```powershell
+gcloud.cmd run services proxy incident-api `
+    --region=us-central1 `
+    --project=cgaraydev-incident-api `
+    --port=8081
+```
+
+Con el proxy abierto, visita http://localhost:8081/.
+
+El proxy se ejecuta localmente; la aplicación se ejecuta en Cloud Run.
+
+### Secretos necesarios
+
+La cuenta de servicio `incident-api-runtime` tiene permiso de lectura
+sobre estos secretos:
+
+- `incident-db-password`, versión 1 → `DB_PASSWORD`.
+- `incident-gemini-api-key`, versión 1 → `GOOGLE_API_KEY`.
+
+Al rotar credenciales, crea nuevas versiones y actualiza las referencias
+del despliegue.
+
+### Límites y comprobaciones
+
+- Instancias mínimas: 0.
+- Máximo configurado de instancias: 1.
+- CPU: 1; memoria: 512 MiB.
+- Concurrencia: 8 solicitudes por instancia.
+- Timeout HTTP: 90 segundos.
+- Timeout del cliente Gemini: 45 segundos.
+
+Estos límites no constituyen un límite monetario.
+Las cuotas gratuitas dependen del servicio y de la cuenta de facturación.
+
+Se verificaron creación, consulta, filtrado, cambios de estado y análisis
+con Gemini desde el servicio desplegado.
+
 ## Endpoints
 
 | Método | Ruta                           | Resultado                                   |
@@ -538,7 +610,8 @@ Limitaciones actuales:
 - Las sugerencias de análisis no se almacenan.
 - Sin límites de solicitudes por usuario.
 - Sin prueba automatizada específica de concurrencia.
-- Sin despliegue en Google Cloud.
+- Acceso al despliegue restringido mediante IAM; sin acceso público anónimo.
+- Sin autenticación de usuarios implementada dentro de la aplicación.
 
 Usar únicamente datos ficticios. La aplicación todavía no está preparada
 para exponerse como servicio público.
