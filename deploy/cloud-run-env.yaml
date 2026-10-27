@@ -1,0 +1,4 @@
+SPRING_PROFILES_ACTIVE: "neon"
+APP_ANALYSIS_ENABLED: "false"
+DB_USER: "neondb_owner"
+DB_URL: "jdbc:postgresql://ep-old-cloud-b65xwd5c.c-2.sa-east-1.aws.neon.tech/neondb?sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory"
