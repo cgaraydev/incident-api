@@ -1,7 +1,7 @@
 --project: cgaraydev-incident-api
 --region: us-central1
 
---image: us-central1-docker.pkg.dev/cgaraydev-incident-api/incident-api/api:v1
+--image: us-central1-docker.pkg.dev/cgaraydev-incident-api/incident-api/api:v2
 --service-account: incident-api-runtime@cgaraydev-incident-api.iam.gserviceaccount.com
 
 --port: 8080

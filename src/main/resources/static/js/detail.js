@@ -192,7 +192,41 @@ function handleDetailCancel(event) {
     }
 }
 
+let pointerStartedOutside = false;
+
+function isOutsideDialog(event) {
+    const bounds = detail.dialog.getBoundingClientRect();
+
+    return event.clientX < bounds.left
+        || event.clientX > bounds.right
+        || event.clientY < bounds.top
+        || event.clientY > bounds.bottom;
+}
+
+function handleDialogPointerDown(event) {
+    pointerStartedOutside =
+        event.isPrimary
+        && event.button === 0
+        && event.target === detail.dialog
+        && isOutsideDialog(event);
+}
+
+function handleDialogBackdropClick(event) {
+    const shouldClose =
+        pointerStartedOutside
+        && event.target === detail.dialog
+        && isOutsideDialog(event);
+
+    pointerStartedOutside = false;
+
+    if (shouldClose) {
+        closeIncidentDetail();
+    }
+}
+
 detail.close.addEventListener("click", closeIncidentDetail);
 detail.dialog.addEventListener("close", handleDetailClosed);
 detail.changeStatus.addEventListener("click", handleStatusChange);
 detail.dialog.addEventListener("cancel", handleDetailCancel);
+detail.dialog.addEventListener("pointerdown", handleDialogPointerDown);
+detail.dialog.addEventListener("click", handleDialogBackdropClick);
