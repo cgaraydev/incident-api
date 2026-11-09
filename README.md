@@ -275,6 +275,23 @@ Las cuotas gratuitas dependen del servicio y de la cuenta de facturación.
 Se verificaron creación, consulta, filtrado, cambios de estado y análisis
 con Gemini desde el servicio desplegado.
 
+## Documentación interactiva de la API
+
+Con la aplicación arrancada:
+
+- Swagger UI: http://localhost:8080/swagger-ui/index.html
+- Contrato OpenAPI: http://localhost:8080/v3/api-docs
+
+Swagger permite consultar los modelos, las validaciones y las respuestas
+HTTP documentadas, además de ejecutar solicitudes contra la API.
+
+Las operaciones ejecutadas desde Swagger afectan a la base de datos
+conectada. El análisis con Gemini realiza una llamada al proveedor
+cuando está habilitado.
+
+Para acceder al despliegue mediante el proxy autenticado de Cloud Run,
+utiliza las mismas rutas con el puerto 8081.
+
 ## Endpoints
 
 | Método | Ruta                           | Resultado                                   |
