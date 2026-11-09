@@ -579,6 +579,29 @@ Puede copiarse para localizar la solicitud en los logs.
 
 Los fallos de conexión sin respuesta HTTP no disponen de ese identificador.
 
+## Comprobaciones de salud
+
+Spring Boot Actuator expone:
+
+- `/actuator/health/liveness`: estado de vida de la aplicación,
+  independiente de PostgreSQL.
+- `/actuator/health/readiness`: preparación de la aplicación y
+  disponibilidad de la conexión a PostgreSQL.
+
+Las respuestas muestran únicamente el estado, sin detalles internos.
+Los endpoints de entorno y configuración no están expuestos.
+
+Se verificó localmente que, al detener PostgreSQL, liveness permanece
+en `200 / UP` y readiness responde `503 / DOWN`. Al recuperar PostgreSQL,
+readiness vuelve a `200 / UP` sin reiniciar la API.
+
+En Cloud Run se comprobaron ambos estados `UP` con Neon disponible.
+Estos endpoints se utilizan para diagnóstico manual; todavía no están
+configurados como sondas HTTP de Cloud Run.
+
+Gemini no participa en estas comprobaciones porque es una función opcional.
+`/api/status` conserva su función de respuesta HTTP básica.
+
 ## Pruebas
 
 Con Docker Desktop activo:
