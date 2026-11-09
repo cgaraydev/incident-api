@@ -555,6 +555,24 @@ Flyway administra el esquema mediante scripts en:
 Las migraciones aplicadas se conservan. Los cambios posteriores del
 esquema se incorporan mediante nuevas migraciones.
 
+## Logs y seguimiento de solicitudes
+
+Cada solicitud a `/api/...` recibe un identificador generado por el
+servidor, devuelto en la cabecera `X-Request-ID`.
+
+Los logs emitidos en el mismo hilo incluyen ese identificador. Al finalizar
+la solicitud se registran el método HTTP, la plantilla de ruta, el código
+de estado y la duración en milisegundos.
+
+El filtro no registra cuerpos, credenciales ni parámetros de consulta.
+Los recursos estáticos y Swagger quedan excluidos de este seguimiento.
+
+Esta implementación cubre las solicitudes síncronas actuales; no constituye
+trazabilidad distribuida entre la API, PostgreSQL y Gemini.
+
+Se verificó la correlación entre la cabecera de respuesta y los logs
+en la ejecución local y en Cloud Run.
+
 ## Pruebas
 
 Con Docker Desktop activo:
