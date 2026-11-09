@@ -559,6 +559,10 @@ Las pruebas del adaptador utilizan un servidor HTTP local que simula
 respuestas válidas, errores del proveedor y timeouts. No requieren una
 clave de Gemini ni realizan llamadas a Google.
 
+La prueba de concurrencia verifica que un cambio de estado espera al
+bloqueo de otra transacción y continúa utilizando el estado confirmado.
+Utiliza PostgreSQL real mediante Testcontainers.
+
 ## Detener el entorno
 
 Detén Java con `Ctrl + C`.
@@ -609,7 +613,6 @@ Limitaciones actuales:
 - Sin autenticación ni autorización.
 - Las sugerencias de análisis no se almacenan.
 - Sin límites de solicitudes por usuario.
-- Sin prueba automatizada específica de concurrencia.
 - Acceso al despliegue restringido mediante IAM; sin acceso público anónimo.
 - Sin autenticación de usuarios implementada dentro de la aplicación.
 
