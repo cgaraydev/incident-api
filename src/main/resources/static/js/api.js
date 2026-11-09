@@ -1,3 +1,61 @@
+async function readJsonResponse(
+    response,
+    fallbackMessage,
+    { message, includeValidation = false } = {}
+) {
+    if (response.ok) {
+        return response.json();
+    }
+
+    let problem;
+
+    try {
+        problem = await response.json();
+    } catch {
+        // El servidor podría responder sin un cuerpo JSON válido.
+    }
+
+    let validationMessages;
+
+    if (includeValidation && Array.isArray(problem?.errors)) {
+        validationMessages = problem.errors
+            .filter(error =>
+                typeof error?.field === "string"
+                && typeof error?.message === "string"
+            )
+            .map(error => `${error.field}: ${error.message}`)
+            .join(" ");
+    }
+
+    const detail = typeof problem?.detail === "string"
+        ? problem.detail
+        : undefined;
+
+    const errorMessage =
+        message
+        || validationMessages
+        || detail
+        || fallbackMessage;
+
+    const header = response.headers.get("X-Request-ID");
+
+    const requestId = header
+        && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(header)
+        ? header
+        : undefined;
+
+    const error = new Error(
+        requestId
+            ? `${errorMessage} Identificador de solicitud: ${requestId}.`
+            : errorMessage
+    );
+
+    error.status = response.status;
+    error.requestId = requestId;
+
+    throw error;
+}
+
 export async function fetchIncidentPage(page, status = "", size = 3) {
     const params = new URLSearchParams({
         page: String(page),
@@ -12,21 +70,10 @@ export async function fetchIncidentPage(page, status = "", size = 3) {
         headers: { Accept: "application/json" }
     });
 
-    if (!response.ok) {
-        let problem;
-
-        try {
-            problem = await response.json();
-        } catch {
-            // La respuesta de error podría no contener JSON.
-        }
-
-        throw new Error(
-            problem?.detail ?? `La consulta falló: HTTP ${response.status}.`
-        );
-    }
-
-    return response.json();
+    return readJsonResponse(
+        response,
+        `La consulta falló: HTTP ${response.status}.`
+    );
 }
 
 export async function createIncident(title, description) {
@@ -39,27 +86,11 @@ export async function createIncident(title, description) {
         body: JSON.stringify({ title, description })
     });
 
-    if (!response.ok) {
-        let problem;
-
-        try {
-            problem = await response.json();
-        } catch {
-            // El servidor podría responder sin un cuerpo JSON.
-        }
-
-        const validationMessages = problem?.errors
-            ?.map(error => `${error.field}: ${error.message}`)
-            .join(" ");
-
-        throw new Error(
-            validationMessages
-            || problem?.detail
-            || `No se pudo crear la incidencia: HTTP ${response.status}.`
-        );
-    }
-
-    return response.json();
+    return readJsonResponse(
+        response,
+        `No se pudo crear la incidencia: HTTP ${response.status}.`,
+        { includeValidation: true }
+    );
 }
 
 export async function fetchIncident(id, signal) {
@@ -71,15 +102,15 @@ export async function fetchIncident(id, signal) {
         }
     );
 
-    if (!response.ok) {
-        throw new Error(
-            response.status === 404
+    return readJsonResponse(
+        response,
+        `No se pudo consultar la incidencia: HTTP ${response.status}.`,
+        {
+            message: response.status === 404
                 ? "La incidencia ya no está disponible."
-                : `No se pudo consultar la incidencia: HTTP ${response.status}.`
-        );
-    }
-
-    return response.json();
+                : undefined
+        }
+    );
 }
 
 export async function changeIncidentStatus(id, status) {
@@ -95,22 +126,10 @@ export async function changeIncidentStatus(id, status) {
         }
     );
 
-    if (!response.ok) {
-        let problem;
-
-        try {
-            problem = await response.json();
-        } catch {
-            // La respuesta podría no contener JSON.
-        }
-
-        throw new Error(
-            problem?.detail
-            ?? `No se pudo cambiar el estado: HTTP ${response.status}.`
-        );
-    }
-
-    return response.json();
+    return readJsonResponse(
+        response,
+        `No se pudo cambiar el estado: HTTP ${response.status}.`
+    );
 }
 
 export async function analyzeIncident(id, signal) {
@@ -123,17 +142,13 @@ export async function analyzeIncident(id, signal) {
         }
     );
 
-    if (!response.ok) {
-        if (response.status === 503) {
-            throw new Error(
-                "El análisis está desactivado o temporalmente no disponible."
-            );
+    return readJsonResponse(
+        response,
+        `No se pudo analizar la incidencia: HTTP ${response.status}.`,
+        {
+            message: response.status === 503
+                ? "El análisis está desactivado o temporalmente no disponible."
+                : `No se pudo analizar la incidencia: HTTP ${response.status}.`
         }
-
-        throw new Error(
-            `No se pudo analizar la incidencia: HTTP ${response.status}.`
-        );
-    }
-
-    return response.json();
+    );
 }
