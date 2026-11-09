@@ -573,6 +573,12 @@ trazabilidad distribuida entre la API, PostgreSQL y Gemini.
 Se verificó la correlación entre la cabecera de respuesta y los logs
 en la ejecución local y en Cloud Run.
 
+Cuando una operación de la API devuelve un error HTTP con la cabecera
+`X-Request-ID`, la interfaz muestra el identificador junto al mensaje.
+Puede copiarse para localizar la solicitud en los logs.
+
+Los fallos de conexión sin respuesta HTTP no disponen de ese identificador.
+
 ## Pruebas
 
 Con Docker Desktop activo:
